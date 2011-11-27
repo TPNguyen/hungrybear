@@ -1,13 +1,20 @@
 <html>
     <head>
         <title>Hungry Bear</title>
-        <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.0/jquery.min.js"></script>
+        <!--<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.0/jquery.min.js"></script>-->
+        <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.6.2.js"></script>
         <script type="text/javascript" src="{{ static_url('main.js') }}"></script>
+        <link rel="stylesheet" type="text/css" href="{{ static_url('main.css') }}" media="all" />
     </head>
     <body>
-        Hello, from Hungry Bear<br /><br />
-        <canvas id="tutorial" width="450" height="450">
+        <h1>Hungry Bear</h1>
+        <h2>A python implementation of the A* search algorithm, by James Hibberd.</h2>
+        <canvas id="tutorial" width="900" height="450">
             Sadly, your browser doesn't support canvas.
         </canvas>
     </body>
+    <!-- Expose server-side constants -->
+    <script type="text/javascript">{% for k, v in constants.items() %}
+        var {{ k }} = {{ v }};{% end %}    
+    </script>
 </html
