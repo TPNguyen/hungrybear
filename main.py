@@ -72,6 +72,10 @@ class Graph(object):
             if this_node_type == node_type:
                 yield point
 
+    def replace(self, node_type_from, node_type_to):
+        for point in self.find_all(node_type_from):
+            self.set(point, node_type_to)
+
     def _iter(self):
         for y in range(self.height):
             for x in range(self.width):
@@ -87,7 +91,7 @@ class BearProvider(object):
                 random.randint(0, graph.width-1),
                 random.randint(0, graph.height-1))
             if graph.get(p) == NodeType.GRASS:
-                graph.set(p, NodeType.BEAR)
+                graph.set(p, NodeType.BEAR_ON_GRASS)
                 break
 
 
@@ -99,7 +103,7 @@ class HoneyProvider(object):
                 random.randint(0, graph.width-1),
                 random.randint(0, graph.height-1))
             if graph.get(p) == NodeType.GRASS:
-                graph.set(p, NodeType.HONEY)
+                graph.set(p, NodeType.HONEY_ON_GRASS)
                 break
 
 
@@ -121,11 +125,13 @@ class TreeProvider(object):
 
 class NodeType(object):
     """Exhaustive list of graph node types."""
-    GRASS =     0
-    BEAR =      1
-    HONEY =     2
-    PATH =      3
-    TREE =      4
+    GRASS =             0
+    BEAR_ON_GRASS =     1
+    HONEY_ON_GRASS =    2
+    PATH =              3
+    BEAR_ON_PATH =      4
+    HONEY_ON_PATH =     5 
+    TREE =              6
 
 
 class GraphMutation(object):
@@ -152,6 +158,8 @@ class GraphMutation(object):
 
     def inst_start(self):
         while not self.stop_signal:
+
+            # Build a new graph.
             self.graph = Graph.build(
                 30, # Width
                 15, # Height
@@ -160,25 +168,40 @@ class GraphMutation(object):
                     HoneyProvider(),
                     TreeProvider(170), # Tree count
                 ])
-            # TODO(jhibberd) Only show after it's solved in case it can't be
-            # solved. Also need lots of comments. also don't show background
-            # for bear and honey while unsolved.
-            SubscribeHandler.publish(self.graph.nodes)
-            start = self.graph.find_one(NodeType.BEAR)
-            goal = self.graph.find_one(NodeType.HONEY)
+
+            # Attempt to solve the graph.
+            start = self.graph.find_one(NodeType.BEAR_ON_GRASS)
+            goal = self.graph.find_one(NodeType.HONEY_ON_GRASS)
             closed_set = set(self.graph.find_all(NodeType.TREE))
             algorithm =\
                 astarsearch.Algorithm(self.graph.width, self.graph.height)
             path = algorithm.search(start, goal, closed_set) 
             if not path:
-                # No path between start and goal.
-                continue
+                continue # Impossible graph.
+
+            # Render the unsolved graph.
+            SubscribeHandler.publish(self.graph.nodes)
             # TODO(jhibberd) The algorithm path shouldn't include the start.
+
+            # Render the solved graph. 
+            time.sleep(2)
             path.remove(start)
             self.graph.set_many(path, NodeType.PATH)
-            time.sleep(2)
+            self.graph.replace(NodeType.BEAR_ON_GRASS, NodeType.BEAR_ON_PATH)
+            self.graph.replace(NodeType.HONEY_ON_GRASS, NodeType.HONEY_ON_PATH)
             SubscribeHandler.publish(self.graph.nodes)
-            time.sleep(5)
+
+            time.sleep(2)
+            path.append(goal)
+            while path and not self.stop_signal:
+                next_path_point = path.pop(0)
+                self.graph.replace(NodeType.BEAR_ON_PATH, NodeType.GRASS)
+                self.graph.set(next_path_point, NodeType.BEAR_ON_PATH)
+                SubscribeHandler.publish(self.graph.nodes)
+                time.sleep(.5)
+            self.graph.replace(NodeType.BEAR_ON_PATH, NodeType.BEAR_ON_GRASS)
+            SubscribeHandler.publish(self.graph.nodes)
+            time.sleep(2)
 
     def inst_stop(self):
         self.stop_signal = True
