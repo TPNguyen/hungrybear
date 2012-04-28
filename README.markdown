@@ -3,4 +3,4 @@ The algorithm efficiently finds a path between two nodes in a graph (in this
 case a bear and a pot of honey). The algorithm is applied to the graph 
 iteratively; the bear moving one node closer to the honey with each iteration.
 
-[Short video of Hungry Bear with a random selection of graphs](https://github.com/jhibberd/hungrybear)
+[Short video of Hungry Bear with a random selection of graphs](http://youtu.be/R4S8W0SbFsw)
