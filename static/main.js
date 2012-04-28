@@ -12,7 +12,7 @@ var websocket = {
     socket: null,
 
     init: function() {
-        var HOST = "ws://localhost:8888/subscribe";
+        var HOST = "ws://ubuntu:8888/subscribe";
         if ("WebSocket" in window) {
             websocket.socket = new WebSocket(HOST);
         } else {

@@ -1,0 +1,6 @@
+__Hungry Bear__ is a python implementation of the [A-star search algorithm](http://en.wikipedia.org/wiki/A*_search_algorithm). 
+The algorithm efficiently finds a path between two nodes (in this case a bear
+and a pot of honey) in a graph. The algorithm is applied to the graph 
+iteratively; the bear moving one node closer to the honey with each iteration.
+
+(Short video of Hungry Bear with a random selection of graphs)[https://github.com/jhibberd/hungrybear]
