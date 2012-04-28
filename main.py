@@ -9,6 +9,9 @@ import tornado.web
 import tornado.websocket
 
 class MainHandler(tornado.web.RequestHandler):
+    """HTTP request handler that returns HTML 'frame' within which Hungry Bear
+    is run.
+    """
 
     def get(self):
         constants = dict([\
@@ -18,6 +21,10 @@ class MainHandler(tornado.web.RequestHandler):
 
 
 class SubscribeHandler(tornado.websocket.WebSocketHandler):
+    """WebSocket handler that allows:
+    * Clients to register for Hungry Bear updates.
+    * The server to update all clients with the current graph state.
+    """
     subscribers = set()
 
     def open(self):
@@ -36,10 +43,12 @@ class SubscribeHandler(tornado.websocket.WebSocketHandler):
 class Graph(object):
     """2-dimensional array representing the graph to be traversed by the search
     algorithm.
+
+    Provides functions for interacting with the graph.
     """
 
     @classmethod
-    def build(cls, width, height, node_providers):
+    def build(cls, node_providers, width, height):
         graph = Graph(width, height)
         [p.apply(graph) for p in node_providers]
         return graph
@@ -84,6 +93,8 @@ class Graph(object):
 
 
 class BearProvider(object):
+    """Provider responsible for initially placing a bear node in the graph.
+    """
     
     def apply(self, graph):
         while True:
@@ -96,6 +107,8 @@ class BearProvider(object):
 
 
 class HoneyProvider(object):
+    """Provider responsible for initially placing the honey node in the graph.
+    """
 
     def apply(self, graph):
         while True:
@@ -108,12 +121,15 @@ class HoneyProvider(object):
 
 
 class TreeProvider(object):
+    """Provider responsible for initially placing the tree nodes across the 
+    graph.
+    """
 
-    def __init__(self, count):
-        self.count = count
+    def __init__(self, num_trees):
+        self.num_trees = num_trees
 
     def apply(self, graph):
-        remaining = self.count
+        remaining = self.num_trees
         while remaining:
             p = (
                 random.randint(0, graph.width-1),
@@ -124,7 +140,7 @@ class TreeProvider(object):
 
 
 class NodeType(object):
-    """Exhaustive list of graph node types."""
+    """Graph node types."""
     GRASS =             0
     BEAR_ON_GRASS =     1
     HONEY_ON_GRASS =    2
@@ -160,14 +176,12 @@ class GraphMutation(object):
         while not self.stop_signal:
 
             # Build a new graph.
-            self.graph = Graph.build(
-                30, # Width
-                15, # Height
-                [
-                    BearProvider(),
-                    HoneyProvider(),
-                    TreeProvider(170), # Tree count
-                ])
+            nodes = [
+                BearProvider(),
+                HoneyProvider(),
+                TreeProvider(num_trees=170),
+                ]
+            self.graph = Graph.build(nodes, width=30, height=15)
 
             # Attempt to solve the graph.
             start = self.graph.find_one(NodeType.BEAR_ON_GRASS)
@@ -177,11 +191,9 @@ class GraphMutation(object):
                 astarsearch.Algorithm(self.graph.width, self.graph.height)
             path = algorithm.search(start, goal, closed_set) 
             if not path:
-                continue # Impossible graph.
+                continue # Graph with no solution.
 
-            # Render the unsolved graph.
             SubscribeHandler.publish(self.graph.nodes)
-            # TODO(jhibberd) The algorithm path shouldn't include the start.
 
             # Render the solved graph. 
             time.sleep(2)
@@ -222,3 +234,4 @@ if __name__ == "__main__":
         tornado.ioloop.IOLoop.instance().start()
     finally:
         GraphMutation.stop()
+

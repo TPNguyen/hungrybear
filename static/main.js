@@ -1,5 +1,3 @@
-// TODO(jhibberd) All colors to hex.
-// TODO(jhibberd) Way more commenting.
 
 $(document).ready(function() {
     if (!window.console) window.console = {};
@@ -12,7 +10,7 @@ var websocket = {
     socket: null,
 
     init: function() {
-        var HOST = "ws://ubuntu:8888/subscribe";
+        var HOST = "ws://localhost:8888/subscribe";
         if ("WebSocket" in window) {
             websocket.socket = new WebSocket(HOST);
         } else {
