@@ -6,6 +6,8 @@ iteratively; the bear moving one node closer to the honey with each iteration.
 [Short video of Hungry Bear with a random selection of graphs](http://youtu.be/R4S8W0SbFsw)
 
 __To install__
+
     pip install tornado
     python main.py
+
 Point your (WebSocket-compatible) browser to `http://localhost:8888` and watch.
